@@ -1302,19 +1302,23 @@ public class GlossaryResourceTest extends EntityResourceTest<Glossary, CreateGlo
     createEntity(createGlossary, ADMIN_AUTH_HEADERS);
 
     // Prepare CSV for import (one term, no explicit status)
-    String csv = createCsv(
-        GlossaryCsv.HEADERS,
-        listOf(
-            ",importedTerm,Imported Term,Description for imported term,,,,,,,,"),
-        null);
+    String csv =
+        createCsv(
+            GlossaryCsv.HEADERS,
+            listOf(",importedTerm,Imported Term,Description for imported term,,,,,,,,"),
+            null);
 
     // Import as USER1 (reviewer)
     CsvImportResult result = importCsv(glossaryName, csv, false);
     assertSummary(result, ApiStatus.SUCCESS, 2, 2, 0); // 1 term + header
 
     // Fetch the imported term and assert status is APPROVED
-    GlossaryTerm importedTerm = new GlossaryTermResourceTest().getEntityByName(
-        glossaryName + ".importedTerm", "status", ADMIN_AUTH_HEADERS);
-    assertEquals(GlossaryTerm.Status.APPROVED, importedTerm.getStatus(), "Imported term should be auto-approved when imported by reviewer");
+    GlossaryTerm importedTerm =
+        new GlossaryTermResourceTest()
+            .getEntityByName(glossaryName + ".importedTerm", "status", ADMIN_AUTH_HEADERS);
+    assertEquals(
+        GlossaryTerm.Status.APPROVED,
+        importedTerm.getStatus(),
+        "Imported term should be auto-approved when imported by reviewer");
   }
 }

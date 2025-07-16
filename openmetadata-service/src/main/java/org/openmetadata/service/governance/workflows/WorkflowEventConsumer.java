@@ -9,10 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
-import org.openmetadata.schema.entity.data.GlossaryTerm;
 import org.openmetadata.schema.entity.events.EventSubscription;
 import org.openmetadata.schema.entity.events.SubscriptionDestination;
 import org.openmetadata.schema.type.ChangeEvent;
@@ -60,7 +58,8 @@ public class WorkflowEventConsumer implements Destination<ChangeEvent> {
 
       if (validEventTypes.contains(eventType) && validEntityTypes.contains(entityType)) {
         if (!shouldTriggerWorkflowForEntity(entityType, event.getEntityId(), updatedBy)) {
-          // Skip triggering workflow for filtered entities (already approved or auto-approved by reviewer)
+          // Skip triggering workflow for filtered entities (already approved or auto-approved by
+          // reviewer)
           return;
         }
         String signal = String.format("%s-%s", entityType, eventType.toString());
@@ -91,7 +90,8 @@ public class WorkflowEventConsumer implements Destination<ChangeEvent> {
   }
 
   // Filtering logic for workflow triggers
-  private boolean shouldTriggerWorkflowForEntity(String entityType, UUID entityId, String updatedBy) {
+  private boolean shouldTriggerWorkflowForEntity(
+      String entityType, UUID entityId, String updatedBy) {
     if (Entity.GLOSSARY_TERM.equals(entityType)) {
       return WorkflowUtil.shouldTriggerGlossaryTermWorkflow(entityId, updatedBy);
     }

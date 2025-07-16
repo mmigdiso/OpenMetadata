@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.openmetadata.common.utils.CommonUtil.listOf;
 import static org.openmetadata.common.utils.CommonUtil.listOrEmpty;
 import static org.openmetadata.schema.type.ColumnDataType.BIGINT;
+import static org.openmetadata.service.Entity.ADMIN_USER_NAME;
 import static org.openmetadata.service.Entity.FIELD_TAGS;
 import static org.openmetadata.service.Entity.GLOSSARY;
 import static org.openmetadata.service.Entity.GLOSSARY_TERM;
@@ -42,8 +43,6 @@ import static org.openmetadata.service.util.EntityUtil.getId;
 import static org.openmetadata.service.util.EntityUtil.toTagLabels;
 import static org.openmetadata.service.util.TestUtils.*;
 import static org.openmetadata.service.util.TestUtils.UpdateType.MINOR_UPDATE;
-import static org.openmetadata.service.Entity.ADMIN_USER_NAME;
-import org.openmetadata.schema.type.EntityReference;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -2202,7 +2201,10 @@ public class GlossaryTermResourceTest extends EntityResourceTest<GlossaryTerm, C
     GlossaryTerm fetched = getEntity(term.getId(), "status,reviewers", ADMIN_AUTH_HEADERS);
 
     // Now assert on the fetched object
-    assertEquals(GlossaryTerm.Status.APPROVED, fetched.getStatus(), "Term should be auto-approved when created by reviewer");
+    assertEquals(
+        GlossaryTerm.Status.APPROVED,
+        fetched.getStatus(),
+        "Term should be auto-approved when created by reviewer");
     assertNotNull(fetched.getReviewers());
     assertFalse(fetched.getReviewers().isEmpty());
   }
@@ -2219,14 +2221,21 @@ public class GlossaryTermResourceTest extends EntityResourceTest<GlossaryTerm, C
             .withReviewers(List.of(USER1_REF))
             .withDescription("desc");
     GlossaryTerm term = createEntity(create, ADMIN_AUTH_HEADERS);
-    assertNotEquals(GlossaryTerm.Status.APPROVED, term.getStatus(), "Term should not be auto-approved when created by non-reviewer");
+    assertNotEquals(
+        GlossaryTerm.Status.APPROVED,
+        term.getStatus(),
+        "Term should not be auto-approved when created by non-reviewer");
 
     // Patch as USER1 (reviewer) to update description
     String origJson = JsonUtils.pojoToJson(term);
     term.setDescription("Updated by reviewer");
     ChangeDescription change = getChangeDescription(term, MINOR_UPDATE);
     fieldUpdated(change, "description", "desc", "Updated by reviewer");
-    GlossaryTerm updated = patchEntityAndCheck(term, origJson, authHeaders(USER1.getName()), MINOR_UPDATE, change);
-    assertEquals(GlossaryTerm.Status.APPROVED, updated.getStatus(), "Term should be auto-approved when updated by reviewer");
+    GlossaryTerm updated =
+        patchEntityAndCheck(term, origJson, authHeaders(USER1.getName()), MINOR_UPDATE, change);
+    assertEquals(
+        GlossaryTerm.Status.APPROVED,
+        updated.getStatus(),
+        "Term should be auto-approved when updated by reviewer");
   }
 }
