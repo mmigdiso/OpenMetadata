@@ -42,6 +42,8 @@ import static org.openmetadata.service.util.EntityUtil.getId;
 import static org.openmetadata.service.util.EntityUtil.toTagLabels;
 import static org.openmetadata.service.util.TestUtils.*;
 import static org.openmetadata.service.util.TestUtils.UpdateType.MINOR_UPDATE;
+import static org.openmetadata.service.Entity.ADMIN_USER_NAME;
+import org.openmetadata.schema.type.EntityReference;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -126,6 +128,7 @@ import org.openmetadata.service.util.MoveGlossaryTermMessage;
 import org.openmetadata.service.util.MoveGlossaryTermResponse;
 import org.openmetadata.service.util.ResultList;
 import org.openmetadata.service.util.TestUtils;
+import org.openmetadata.service.util.UserUtil;
 import org.testcontainers.shaded.com.google.common.collect.Lists;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -2178,5 +2181,52 @@ public class GlossaryTermResourceTest extends EntityResourceTest<GlossaryTerm, C
 
     WebTarget target = getCollection().path(String.format("/%s/assets/add", term.getId()));
     TestUtils.put(target, payload, BulkOperationResult.class, OK, ADMIN_AUTH_HEADERS);
+  }
+
+  @Test
+  void test_createGlossaryTerm_byReviewer_autoApproved() throws IOException, InterruptedException {
+    // Create a glossary with ADMIN as reviewer
+    EntityReference adminRef = UserUtil.getUserOrBot(ADMIN_USER_NAME);
+    Glossary glossary = createGlossary("AutoApproveGlossary", List.of(adminRef), null);
+    // Create a term as ADMIN (who is a reviewer)
+    CreateGlossaryTerm create =
+        new CreateGlossaryTerm()
+            .withName("autoApproveTerm")
+            .withGlossary(glossary.getFullyQualifiedName())
+            .withReviewers(List.of(adminRef))
+            .withDescription("desc");
+    GlossaryTerm term = createEntity(create, ADMIN_AUTH_HEADERS);
+    java.lang.Thread.sleep(1000);
+
+    // Fetch the term again from the API to get the latest status and reviewers
+    GlossaryTerm fetched = getEntity(term.getId(), "status,reviewers", ADMIN_AUTH_HEADERS);
+
+    // Now assert on the fetched object
+    assertEquals(GlossaryTerm.Status.APPROVED, fetched.getStatus(), "Term should be auto-approved when created by reviewer");
+    assertNotNull(fetched.getReviewers());
+    assertFalse(fetched.getReviewers().isEmpty());
+  }
+
+  @Test
+  void test_updateGlossaryTerm_byReviewer_autoApproved() throws IOException {
+    // Create a glossary with USER1 as reviewer
+    Glossary glossary = createGlossary("AutoApproveGlossaryUpdate", List.of(USER1_REF), null);
+    // Create a term as ADMIN (not reviewer, should be DRAFT)
+    CreateGlossaryTerm create =
+        new CreateGlossaryTerm()
+            .withName("autoApproveUpdateTerm")
+            .withGlossary(glossary.getFullyQualifiedName())
+            .withReviewers(List.of(USER1_REF))
+            .withDescription("desc");
+    GlossaryTerm term = createEntity(create, ADMIN_AUTH_HEADERS);
+    assertNotEquals(GlossaryTerm.Status.APPROVED, term.getStatus(), "Term should not be auto-approved when created by non-reviewer");
+
+    // Patch as USER1 (reviewer) to update description
+    String origJson = JsonUtils.pojoToJson(term);
+    term.setDescription("Updated by reviewer");
+    ChangeDescription change = getChangeDescription(term, MINOR_UPDATE);
+    fieldUpdated(change, "description", "desc", "Updated by reviewer");
+    GlossaryTerm updated = patchEntityAndCheck(term, origJson, authHeaders(USER1.getName()), MINOR_UPDATE, change);
+    assertEquals(GlossaryTerm.Status.APPROVED, updated.getStatus(), "Term should be auto-approved when updated by reviewer");
   }
 }

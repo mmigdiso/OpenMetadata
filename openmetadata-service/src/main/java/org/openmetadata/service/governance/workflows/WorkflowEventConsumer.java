@@ -8,8 +8,11 @@ import static org.openmetadata.service.governance.workflows.WorkflowVariableHand
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
+import org.openmetadata.schema.entity.data.GlossaryTerm;
 import org.openmetadata.schema.entity.events.EventSubscription;
 import org.openmetadata.schema.entity.events.SubscriptionDestination;
 import org.openmetadata.schema.type.ChangeEvent;
@@ -53,8 +56,13 @@ public class WorkflowEventConsumer implements Destination<ChangeEvent> {
     try {
       EventType eventType = event.getEventType();
       String entityType = event.getEntityType();
+      String updatedBy = event.getUserName(); // Get the updater from the event
 
       if (validEventTypes.contains(eventType) && validEntityTypes.contains(entityType)) {
+        if (!shouldTriggerWorkflowForEntity(entityType, event.getEntityId(), updatedBy)) {
+          // Skip triggering workflow for filtered entities (already approved or auto-approved by reviewer)
+          return;
+        }
         String signal = String.format("%s-%s", entityType, eventType.toString());
 
         EntityReference entityReference =
@@ -80,6 +88,14 @@ public class WorkflowEventConsumer implements Destination<ChangeEvent> {
               GOVERNANCE_WORKFLOW_CHANGE_EVENT, exc.getMessage()),
           Pair.of(subscriptionDestination.getId(), event));
     }
+  }
+
+  // Filtering logic for workflow triggers
+  private boolean shouldTriggerWorkflowForEntity(String entityType, UUID entityId, String updatedBy) {
+    if (Entity.GLOSSARY_TERM.equals(entityType)) {
+      return WorkflowUtil.shouldTriggerGlossaryTermWorkflow(entityId, updatedBy);
+    }
+    return true; // Default: trigger for unknown types
   }
 
   @Override

@@ -211,6 +211,8 @@ public class GlossaryRepository extends EntityRepository<Glossary> {
           .withOwners(getOwners(printer, csvRecord, 9))
           .withStatus(getTermStatus(printer, csvRecord))
           .withExtension(getExtension(printer, csvRecord, 11));
+      // Set the importing user as updatedBy for reviewer auto-approval logic
+      glossaryTerm.setUpdatedBy(importedBy);
       if (processRecord) {
         createEntity(printer, csvRecord, glossaryTerm, GLOSSARY_TERM);
       }
