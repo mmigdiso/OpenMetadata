@@ -11,40 +11,32 @@
  *  limitations under the License.
  */
 import dataCollaborationPng from '../assets/img/login-screen/data-collabration/data-collbration-optimized.png';
-import dataCollaborationWebp from '../assets/img/login-screen/data-collabration/data-collbration.webp';
 import discoveryPng from '../assets/img/login-screen/discovery/data-discovery-optimized.png';
-import discoveryWebp from '../assets/img/login-screen/discovery/data-discovery.webp';
 import governancePng from '../assets/img/login-screen/governance/governce-optimized.png';
-import governanceWebp from '../assets/img/login-screen/governance/governce.webp';
 import observabilityPng from '../assets/img/login-screen/observability/data-observability-optimized.png';
-import observabilityWebp from '../assets/img/login-screen/observability/data-observability.webp';
 
 class LoginClassBase {
   public getLoginCarouselContent() {
     const carouselContent = [
       {
         title: 'governance',
-        imagePng: governancePng,
-        imageWebp: governanceWebp,
+        image: governancePng,
         descriptionKey: 'assess-data-reliability-with-data-profiler-lineage',
       },
       {
         title: 'data-collaboration',
-        imagePng: dataCollaborationPng,
-        imageWebp: dataCollaborationWebp,
+        image: dataCollaborationPng,
         descriptionKey: 'deeply-understand-table-relations-message',
       },
       {
         title: 'data-observability',
-        imagePng: observabilityPng,
-        imageWebp: observabilityWebp,
+        image: observabilityPng,
         descriptionKey:
           'discover-your-data-and-unlock-the-value-of-data-assets',
       },
       {
         title: 'data-discovery',
-        imagePng: discoveryPng,
-        imageWebp: discoveryWebp,
+        image: discoveryPng,
         descriptionKey: 'enables-end-to-end-metadata-management',
       },
     ];
