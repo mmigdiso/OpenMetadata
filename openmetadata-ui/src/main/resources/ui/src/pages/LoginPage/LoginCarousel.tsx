@@ -48,7 +48,15 @@ const LoginCarousel = () => {
             </p>
           </div>
 
-          <img alt="slider" className="main-image" src={data.image} />
+          <picture>
+            <source srcSet={data.imageWebp} type="image/webp" />
+            <img
+              alt="slider"
+              className="main-image"
+              loading={idx === 0 ? 'eager' : 'lazy'}
+              src={data.imagePng}
+            />
+          </picture>
         </div>
       ))}
     </Carousel>

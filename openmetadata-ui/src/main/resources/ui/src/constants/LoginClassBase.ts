@@ -10,33 +10,41 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-import dataCollaborationImg from '../assets/img/login-screen/data-collabration/data-collbration.png';
-import discoveryImg from '../assets/img/login-screen/discovery/data-discovery.png';
-import governanceImg from '../assets/img/login-screen/governance/governce.png';
-import observabilityImg from '../assets/img/login-screen/observability/data-observability.png';
+import dataCollaborationPng from '../assets/img/login-screen/data-collabration/data-collbration-optimized.png';
+import dataCollaborationWebp from '../assets/img/login-screen/data-collabration/data-collbration.webp';
+import discoveryPng from '../assets/img/login-screen/discovery/data-discovery-optimized.png';
+import discoveryWebp from '../assets/img/login-screen/discovery/data-discovery.webp';
+import governancePng from '../assets/img/login-screen/governance/governce-optimized.png';
+import governanceWebp from '../assets/img/login-screen/governance/governce.webp';
+import observabilityPng from '../assets/img/login-screen/observability/data-observability-optimized.png';
+import observabilityWebp from '../assets/img/login-screen/observability/data-observability.webp';
 
 class LoginClassBase {
   public getLoginCarouselContent() {
     const carouselContent = [
       {
         title: 'governance',
-        image: governanceImg,
+        imagePng: governancePng,
+        imageWebp: governanceWebp,
         descriptionKey: 'assess-data-reliability-with-data-profiler-lineage',
       },
       {
         title: 'data-collaboration',
-        image: dataCollaborationImg,
+        imagePng: dataCollaborationPng,
+        imageWebp: dataCollaborationWebp,
         descriptionKey: 'deeply-understand-table-relations-message',
       },
       {
         title: 'data-observability',
-        image: observabilityImg,
+        imagePng: observabilityPng,
+        imageWebp: observabilityWebp,
         descriptionKey:
           'discover-your-data-and-unlock-the-value-of-data-assets',
       },
       {
         title: 'data-discovery',
-        image: discoveryImg,
+        imagePng: discoveryPng,
+        imageWebp: discoveryWebp,
         descriptionKey: 'enables-end-to-end-metadata-management',
       },
     ];
