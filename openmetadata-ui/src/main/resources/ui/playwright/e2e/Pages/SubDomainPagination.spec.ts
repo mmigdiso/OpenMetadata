@@ -32,11 +32,11 @@ test.describe('SubDomain Pagination', () => {
   test.slow(true);
 
   test.beforeAll('Setup domain and subdomains', async ({ browser }) => {
-    const { page, apiContext, afterAction } = await createNewPage(browser);
+    test.slow(true);
+
+    const { apiContext, afterAction } = await createNewPage(browser);
 
     await domain.create(apiContext);
-
-    await redirectToHomePage(page);
 
     const createPromises = [];
     for (let i = 1; i <= SUBDOMAIN_COUNT; i++) {
@@ -55,15 +55,7 @@ test.describe('SubDomain Pagination', () => {
 
   test.afterAll('Cleanup', async ({ browser }) => {
     const { apiContext, afterAction } = await createNewPage(browser);
-
-    // Delete all subdomains in parallel
-    const deletePromises = subDomains.map((subDomain) =>
-      subDomain.delete(apiContext)
-    );
-    await Promise.all(deletePromises);
-
     await domain.delete(apiContext);
-
     await afterAction();
   });
 
@@ -90,23 +82,20 @@ test.describe('SubDomain Pagination', () => {
       await expect(subDomainsTab).toContainText('60');
     });
 
-    await test.step(
-      'Navigate to subdomains tab and verify initial data load',
-      async () => {
-        const subDomainRes = page.waitForResponse(
-          '/api/v1/search/query?q=*&from=0&size=50&index=domain_search_index&deleted=false&track_total_hits=true'
-        );
-        await page.getByTestId('subdomains').click();
-        await subDomainRes;
-        await page.waitForSelector('[data-testid="loader"]', {
-          state: 'detached',
-        });
+    await test.step('Navigate to subdomains tab and verify initial data load', async () => {
+      const subDomainRes = page.waitForResponse(
+        '/api/v1/search/query?q=*&from=0&size=50&index=domain_search_index&deleted=false&track_total_hits=true'
+      );
+      await page.getByTestId('subdomains').click();
+      await subDomainRes;
+      await page.waitForSelector('[data-testid="loader"]', {
+        state: 'detached',
+      });
 
-        await expect(page.locator('table')).toBeVisible();
+      await expect(page.locator('table')).toBeVisible();
 
-        await expect(page.locator('[data-testid="pagination"]')).toBeVisible();
-      }
-    );
+      await expect(page.locator('[data-testid="pagination"]')).toBeVisible();
+    });
 
     await test.step('Test pagination navigation', async () => {
       // Verify current page shows page 1
@@ -127,35 +116,32 @@ test.describe('SubDomain Pagination', () => {
       await expect(tableRows).toHaveCount(50);
     });
 
-    await test.step(
-      'Create new subdomain and verify count updates',
-      async () => {
-        const subDomain = new SubDomain(domain);
-        await createSubDomain(page, subDomain.data);
+    await test.step('Create new subdomain and verify count updates', async () => {
+      const subDomain = new SubDomain(domain);
+      await createSubDomain(page, subDomain.data);
 
-        await redirectToHomePage(page);
+      await redirectToHomePage(page);
 
-        await sidebarClick(page, SidebarItem.DOMAIN);
-        await page.waitForLoadState('networkidle');
+      await sidebarClick(page, SidebarItem.DOMAIN);
+      await page.waitForLoadState('networkidle');
 
-        await selectDomain(page, domain.data);
+      await selectDomain(page, domain.data);
 
-        const subDomainsTab = page.getByTestId('subdomains');
+      const subDomainsTab = page.getByTestId('subdomains');
 
-        await expect(subDomainsTab).toContainText('61');
+      await expect(subDomainsTab).toContainText('61');
 
-        const { apiContext, afterAction } = await getApiContext(page);
+      const { apiContext, afterAction } = await getApiContext(page);
 
-        const response = await apiContext.get(
-          '/api/v1/domains/name/' +
-            encodeURIComponent(`"${domain.data.name}"."NewTestSubDomain"`)
-        );
-        const subDomainData = await response.json();
-        await apiContext.delete(
-          `/api/v1/domains/${subDomainData.id}?hardDelete=true`
-        );
-        await afterAction();
-      }
-    );
+      const response = await apiContext.get(
+        '/api/v1/domains/name/' +
+          encodeURIComponent(`"${domain.data.name}"."NewTestSubDomain"`)
+      );
+      const subDomainData = await response.json();
+      await apiContext.delete(
+        `/api/v1/domains/${subDomainData.id}?hardDelete=true`
+      );
+      await afterAction();
+    });
   });
 });

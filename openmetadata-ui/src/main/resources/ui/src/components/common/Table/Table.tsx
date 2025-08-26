@@ -33,8 +33,6 @@ import {
 } from 'react';
 import { useAntdColumnResize } from 'react-antd-column-resize';
 import { Column } from 'react-antd-column-resize/dist/useAntdColumnResize/types';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useTranslation } from 'react-i18next';
 import { ReactComponent as ColumnIcon } from '../../../assets/svg/ic-column.svg';
 import { useCurrentUserPreferences } from '../../../hooks/currentUserStore/useCurrentUserStore';
@@ -161,14 +159,16 @@ const Table = <T extends Record<string, unknown>>(
             <div className="d-flex justify-between items-center w-52 p-x-md p-b-xss border-bottom">
               <Typography.Text
                 className="text-sm text-grey-muted font-medium"
-                data-testid="column-dropdown-title">
+                data-testid="column-dropdown-title"
+              >
                 {t('label.column')}
               </Typography.Text>
               <Button
                 className="text-primary text-sm p-0"
                 data-testid="column-dropdown-action-button"
                 type="text"
-                onClick={handleBulkColumnAction}>
+                onClick={handleBulkColumnAction}
+              >
                 {dropdownColumnList.length === columnDropdownSelections.length
                   ? t('label.hide-all')
                   : t('label.view-all')}
@@ -268,7 +268,8 @@ const Table = <T extends Record<string, unknown>>(
           'p-y-md':
             searchProps ?? rest.extraTableFilters ?? isCustomizeColumnEnable,
         })}
-        span={24}>
+        span={24}
+      >
         <Row className="p-x-md">
           {searchProps ? (
             <Col span={12}>
@@ -288,27 +289,28 @@ const Table = <T extends Record<string, unknown>>(
                 'd-flex justify-end items-center gap-5',
                 rest.extraTableFiltersClassName
               )}
-              span={searchProps ? 12 : 24}>
+              span={searchProps ? 12 : 24}
+            >
               {rest.extraTableFilters}
               {isCustomizeColumnEnable && (
-                <DndProvider backend={HTML5Backend}>
-                  <Dropdown
-                    className="custom-column-dropdown-menu text-primary"
-                    menu={menu}
-                    open={isDropdownVisible}
-                    placement="bottomRight"
-                    trigger={['click']}
-                    onOpenChange={setIsDropdownVisible}>
-                    <Button
-                      className="remove-button-background-hover"
-                      data-testid="column-dropdown"
-                      icon={<Icon component={ColumnIcon} />}
-                      size="small"
-                      type="text">
-                      {t('label.column-plural')}
-                    </Button>
-                  </Dropdown>
-                </DndProvider>
+                <Dropdown
+                  className="custom-column-dropdown-menu text-primary"
+                  menu={menu}
+                  open={isDropdownVisible}
+                  placement="bottomRight"
+                  trigger={['click']}
+                  onOpenChange={setIsDropdownVisible}
+                >
+                  <Button
+                    className="remove-button-background-hover"
+                    data-testid="column-dropdown"
+                    icon={<Icon component={ColumnIcon} />}
+                    size="small"
+                    type="text"
+                  >
+                    {t('label.column-plural')}
+                  </Button>
+                </Dropdown>
               )}
             </Col>
           )}

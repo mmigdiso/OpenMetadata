@@ -13,17 +13,8 @@
 
 import { EyeFilled, MoreOutlined, PlusOutlined } from '@ant-design/icons';
 import { Button, Card, Col, Dropdown, Input, Modal, Space } from 'antd';
-import {
-  cloneDeep,
-  isEmpty,
-  isNil,
-  isUndefined,
-  toString,
-  uniqueId,
-} from 'lodash';
+import { cloneDeep, isEmpty, isNil, isUndefined, uniqueId } from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
 import RGL, { Layout, WidthProvider } from 'react-grid-layout';
 import { useTranslation } from 'react-i18next';
 import {
@@ -50,6 +41,7 @@ import {
   getCustomizableWidgetByPage,
   getDefaultTabs,
   getDefaultWidgetForTab,
+  getTabDisplayName,
 } from '../../../utils/CustomizePage/CustomizePageUtils';
 import { getEntityName } from '../../../utils/EntityUtils';
 import { TabItem } from '../../common/DraggableTabs/DraggableTabs';
@@ -381,53 +373,55 @@ export const CustomizeTabWidget = () => {
             <Button
               icon={<PlusOutlined />}
               type="primary"
-              onClick={() => setShowAddTabModal(true)}>
+              onClick={() => setShowAddTabModal(true)}
+            >
               {t('label.add-entity', {
                 entity: t('label.tab'),
               })}
             </Button>
           }
-          title={t('label.customize-tab-plural')}>
-          <DndProvider backend={HTML5Backend}>
-            <div className="d-flex flex-wrap gap-4">
-              {items.map((item, index) => (
-                <TabItem
-                  index={index}
-                  item={item}
-                  key={item.id}
-                  moveTab={moveTab}
-                  shouldHide={systemTabIds.includes(item.id)}
-                  onEdit={onChange}
-                  onRemove={remove}
-                  onRename={handleTabEditClick}
-                />
-              ))}
-              {hiddenTabs.map((item) => (
-                <Dropdown
-                  key={item.id}
-                  menu={{
-                    items: [
-                      {
-                        label: t('label.show'),
-                        key: 'show',
-                        icon: <EyeFilled />,
-                      },
-                    ],
-                    onClick: () => add(item),
-                  }}
-                  trigger={['click']}>
-                  <Button
-                    className="draggable-hidden-tab-item bg-grey"
-                    data-testid={`tab-${item.displayName}`}>
-                    <Space>
-                      {getEntityName(item)}
-                      <MoreOutlined />
-                    </Space>
-                  </Button>
-                </Dropdown>
-              ))}
-            </div>
-          </DndProvider>
+          title={t('label.customize-tab-plural')}
+        >
+          <div className="d-flex flex-wrap gap-4">
+            {items.map((item, index) => (
+              <TabItem
+                index={index}
+                item={item}
+                key={item.id}
+                moveTab={moveTab}
+                shouldHide={systemTabIds.includes(item.id)}
+                onEdit={onChange}
+                onRemove={remove}
+                onRename={handleTabEditClick}
+              />
+            ))}
+            {hiddenTabs.map((item) => (
+              <Dropdown
+                key={item.id}
+                menu={{
+                  items: [
+                    {
+                      label: t('label.show'),
+                      key: 'show',
+                      icon: <EyeFilled />,
+                    },
+                  ],
+                  onClick: () => add(item),
+                }}
+                trigger={['click']}
+              >
+                <Button
+                  className="draggable-hidden-tab-item bg-grey"
+                  data-testid={`tab-${item.name}`}
+                >
+                  <Space>
+                    {getTabDisplayName(item)}
+                    <MoreOutlined />
+                  </Space>
+                </Button>
+              </Dropdown>
+            ))}
+          </div>
         </Card>
       </Col>
       <Col span={24}>
@@ -438,7 +432,8 @@ export const CustomizeTabWidget = () => {
             <Button
               icon={<PlusOutlined />}
               type="primary"
-              onClick={handleOpenAddWidgetModal}>
+              onClick={handleOpenAddWidgetModal}
+            >
               {t('label.add-entity', {
                 entity: t('label.widget'),
               })}
@@ -448,7 +443,8 @@ export const CustomizeTabWidget = () => {
             entity: getEntityName(
               items.find((item) => item.id === activeKey) as Tab
             ),
-          })}>
+          })}
+        >
           {/* 
             ReactGridLayout with optimized drag and drop behavior for tab customization
             - verticalCompact: Packs widgets tightly without gaps
@@ -464,7 +460,8 @@ export const CustomizeTabWidget = () => {
             margin={[16, 16]}
             preventCollision={false}
             rowHeight={100}
-            onLayoutChange={handleLayoutUpdate}>
+            onLayoutChange={handleLayoutUpdate}
+          >
             {widgets}
           </ReactGridLayout>
         </Card>
@@ -491,7 +488,8 @@ export const CustomizeTabWidget = () => {
             entity: t('label.tab'),
           })}
           onCancel={() => setShowAddTabModal(false)}
-          onOk={() => add()}>
+          onOk={() => add()}
+        >
           <Input
             autoFocus
             value={newTabName}
@@ -505,10 +503,11 @@ export const CustomizeTabWidget = () => {
           open={!isNil(editableItem)}
           title="Rename tab"
           onCancel={() => setEditableItem(null)}
-          onOk={handleRenameSave}>
+          onOk={handleRenameSave}
+        >
           <Input
             autoFocus
-            value={toString(getEntityName(editableItem))}
+            value={getTabDisplayName(editableItem)}
             onChange={handleChange}
           />
         </Modal>

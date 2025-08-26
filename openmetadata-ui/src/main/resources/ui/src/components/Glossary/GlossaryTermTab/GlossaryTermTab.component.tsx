@@ -32,8 +32,6 @@ import classNames from 'classnames';
 import { compare } from 'fast-json-patch';
 import { cloneDeep, isEmpty, isUndefined } from 'lodash';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { ReactComponent as IconDrag } from '../../../assets/svg/drag.svg';
@@ -361,7 +359,8 @@ const GlossaryTermTab = ({ isGlossary, className }: GlossaryTermTabProps) => {
                 className="cursor-pointer vertical-baseline"
                 data-testid={name}
                 style={{ color: record.style?.color }}
-                to={getGlossaryPath(record.fullyQualifiedName ?? record.name)}>
+                to={getGlossaryPath(record.fullyQualifiedName ?? record.name)}
+              >
                 {name}
               </Link>
             </>
@@ -419,7 +418,8 @@ const GlossaryTermTab = ({ isGlossary, className }: GlossaryTermTabProps) => {
               }
               overlayStyle={{ minWidth: '260px' }}
               placement="topLeft"
-              trigger="hover">
+              trigger="hover"
+            >
               <div>
                 <StatusBadge
                   dataTestId={termFQN + '-status'}
@@ -486,7 +486,8 @@ const GlossaryTermTab = ({ isGlossary, className }: GlossaryTermTabProps) => {
                 <Tooltip
                   title={t('label.add-entity', {
                     entity: t('label.glossary-term'),
-                  })}>
+                  })}
+                >
                   <Button
                     className="add-new-term-btn text-grey-muted flex-center"
                     data-testid="add-classification"
@@ -505,7 +506,8 @@ const GlossaryTermTab = ({ isGlossary, className }: GlossaryTermTabProps) => {
               <Tooltip
                 title={t('label.edit-entity', {
                   entity: t('label.glossary-term'),
-                })}>
+                })}
+              >
                 <Button
                   className="cursor-pointer flex-center"
                   data-testid="edit-button"
@@ -598,7 +600,8 @@ const GlossaryTermTab = ({ isGlossary, className }: GlossaryTermTabProps) => {
             <div className="status-selection-dropdown">
               <Checkbox.Group
                 className="glossary-col-sel-checkbox-group"
-                value={statusDropdownSelection}>
+                value={statusDropdownSelection}
+              >
                 {GLOSSARY_TERM_STATUS_OPTIONS.map((option) => (
                   <div key={option.value}>
                     <Checkbox
@@ -606,7 +609,8 @@ const GlossaryTermTab = ({ isGlossary, className }: GlossaryTermTabProps) => {
                       value={option.value}
                       onChange={(e) =>
                         handleCheckboxChange(option.value, e.target.checked)
-                      }>
+                      }
+                    >
                       <p className="glossary-dropdown-label">{option.text}</p>
                     </Checkbox>
                   </div>
@@ -628,13 +632,15 @@ const GlossaryTermTab = ({ isGlossary, className }: GlossaryTermTabProps) => {
                 <Button
                   className="custom-glossary-dropdown-action-btn"
                   type="primary"
-                  onClick={handleStatusSelectionDropdownSave}>
+                  onClick={handleStatusSelectionDropdownSave}
+                >
                   {t('label.save')}
                 </Button>
                 <Button
                   className="custom-glossary-dropdown-action-btn"
                   type="default"
-                  onClick={handleStatusSelectionDropdownCancel}>
+                  onClick={handleStatusSelectionDropdownCancel}
+                >
                   {t('label.cancel')}
                 </Button>
               </Space>
@@ -667,12 +673,14 @@ const GlossaryTermTab = ({ isGlossary, className }: GlossaryTermTabProps) => {
           menu={statusDropdownMenu}
           open={isStatusDropdownVisible}
           trigger={['click']}
-          onOpenChange={setIsStatusDropdownVisible}>
+          onOpenChange={setIsStatusDropdownVisible}
+        >
           <Button
             className="text-primary remove-button-background-hover"
             data-testid="glossary-status-dropdown"
             size="small"
-            type="text">
+            type="text"
+          >
             <Space>
               {t('label.status')}
               <DownOutlined />
@@ -687,7 +695,8 @@ const GlossaryTermTab = ({ isGlossary, className }: GlossaryTermTabProps) => {
           data-testid="expand-collapse-all-button"
           size="small"
           type="text"
-          onClick={toggleExpandAll}>
+          onClick={toggleExpandAll}
+        >
           <Space align="center" size={4}>
             <Icon
               className="text-primary"
@@ -882,28 +891,26 @@ const GlossaryTermTab = ({ isGlossary, className }: GlossaryTermTabProps) => {
       {/* Have use the col to set the width of the table, to only use the viewport width for the table columns */}
       <Col className="w-full" ref={tableContainerRef} span={24}>
         {glossaryTerms.length > 0 ? (
-          <DndProvider backend={HTML5Backend}>
-            <Table
-              resizableColumns
-              className={classNames('drop-over-background', {
-                'drop-over-table': isTableHovered,
-              })}
-              columns={columns}
-              components={TABLE_CONSTANTS}
-              data-testid="glossary-terms-table"
-              dataSource={filteredGlossaryTerms}
-              defaultVisibleColumns={DEFAULT_VISIBLE_COLUMNS}
-              expandable={expandableConfig}
-              extraTableFilters={extraTableFilters}
-              loading={isTableLoading || termsLoading}
-              pagination={false}
-              rowKey="fullyQualifiedName"
-              size="small"
-              staticVisibleColumns={STATIC_VISIBLE_COLUMNS}
-              onHeaderRow={onTableHeader}
-              onRow={onTableRow}
-            />
-          </DndProvider>
+          <Table
+            resizableColumns
+            className={classNames('drop-over-background', {
+              'drop-over-table': isTableHovered,
+            })}
+            columns={columns}
+            components={TABLE_CONSTANTS}
+            data-testid="glossary-terms-table"
+            dataSource={filteredGlossaryTerms}
+            defaultVisibleColumns={DEFAULT_VISIBLE_COLUMNS}
+            expandable={expandableConfig}
+            extraTableFilters={extraTableFilters}
+            loading={isTableLoading || termsLoading}
+            pagination={false}
+            rowKey="fullyQualifiedName"
+            size="small"
+            staticVisibleColumns={STATIC_VISIBLE_COLUMNS}
+            onHeaderRow={onTableHeader}
+            onRow={onTableRow}
+          />
         ) : (
           <ErrorPlaceHolder />
         )}
@@ -926,7 +933,8 @@ const GlossaryTermTab = ({ isGlossary, className }: GlossaryTermTabProps) => {
             </>
           }
           onCancel={onDragConfirmationModalClose}
-          onOk={handleChangeGlossaryTerm}>
+          onOk={handleChangeGlossaryTerm}
+        >
           <Transi18next
             i18nKey="message.entity-transfer-message"
             renderElement={<strong />}
@@ -946,7 +954,8 @@ const GlossaryTermTab = ({ isGlossary, className }: GlossaryTermTabProps) => {
                 checked={confirmCheckboxChecked}
                 className="text-grey-700"
                 data-testid="confirm-status-checkbox"
-                onChange={(e) => setConfirmCheckboxChecked(e.target.checked)}>
+                onChange={(e) => setConfirmCheckboxChecked(e.target.checked)}
+              >
                 <span>
                   <Transi18next
                     i18nKey="message.entity-transfer-confirmation-message"

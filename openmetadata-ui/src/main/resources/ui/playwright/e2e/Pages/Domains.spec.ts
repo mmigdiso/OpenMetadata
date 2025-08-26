@@ -14,6 +14,8 @@ import base, { APIRequestContext, expect, Page } from '@playwright/test';
 import { Operation } from 'fast-json-patch';
 import { get } from 'lodash';
 import { SidebarItem } from '../../constant/sidebar';
+import { PolicyClass } from '../../support/access-control/PoliciesClass';
+import { RolesClass } from '../../support/access-control/RolesClass';
 import { DataProduct } from '../../support/domain/DataProduct';
 import { Domain } from '../../support/domain/Domain';
 import { SubDomain } from '../../support/domain/SubDomain';
@@ -21,10 +23,12 @@ import {
   EntityTypeEndpoint,
   ENTITY_PATH,
 } from '../../support/entity/Entity.interface';
+import { TableClass } from '../../support/entity/TableClass';
 import { Glossary } from '../../support/glossary/Glossary';
 import { GlossaryTerm } from '../../support/glossary/GlossaryTerm';
 import { ClassificationClass } from '../../support/tag/ClassificationClass';
 import { TagClass } from '../../support/tag/TagClass';
+import { TeamClass } from '../../support/team/TeamClass';
 import { UserClass } from '../../support/user/UserClass';
 import { performAdminLogin } from '../../utils/admin';
 import {
@@ -55,6 +59,7 @@ import {
   selectDomain,
   selectSubDomain,
   setupAssetsForDomain,
+  setupDomainHasDomainTest,
   setupDomainOwnershipTest,
   verifyDataProductAssetsAfterDelete,
   verifyDomain,
@@ -317,14 +322,11 @@ test.describe('Domains', () => {
     await sidebarClick(page, SidebarItem.DOMAIN);
     await page.reload();
 
-    await test.step(
-      'Create DataProduct and custom properties for it',
-      async () => {
-        await selectDomain(page, domain.data);
-        await createDataProduct(page, dataProduct1.data);
-        await dataProduct1.prepareCustomProperty(apiContext);
-      }
-    );
+    await test.step('Create DataProduct and custom properties for it', async () => {
+      await selectDomain(page, domain.data);
+      await createDataProduct(page, dataProduct1.data);
+      await dataProduct1.prepareCustomProperty(apiContext);
+    });
 
     await test.step(`Set ${titleText} Custom Property`, async () => {
       for (const type of properties) {
@@ -536,23 +538,20 @@ test.describe('Domains', () => {
         assets,
       });
 
-      await test.step(
-        'Delete domain & recreate the same domain and data product',
-        async () => {
-          await domain.delete(apiContext);
-          await domain1.create(apiContext);
-          await newDomainDP1.create(apiContext);
-          await newDomainDP2.create(apiContext);
-          await page.reload();
-          await redirectToHomePage(page);
-          await sidebarClick(page, SidebarItem.DOMAIN);
-          await selectDataProduct(page, domain1.data, newDomainDP1.data);
-          await checkAssetsCount(page, 0);
-          await sidebarClick(page, SidebarItem.DOMAIN);
-          await selectDataProduct(page, domain1.data, newDomainDP2.data);
-          await checkAssetsCount(page, 0);
-        }
-      );
+      await test.step('Delete domain & recreate the same domain and data product', async () => {
+        await domain.delete(apiContext);
+        await domain1.create(apiContext);
+        await newDomainDP1.create(apiContext);
+        await newDomainDP2.create(apiContext);
+        await page.reload();
+        await redirectToHomePage(page);
+        await sidebarClick(page, SidebarItem.DOMAIN);
+        await selectDataProduct(page, domain1.data, newDomainDP1.data);
+        await checkAssetsCount(page, 0);
+        await sidebarClick(page, SidebarItem.DOMAIN);
+        await selectDataProduct(page, domain1.data, newDomainDP2.data);
+        await checkAssetsCount(page, 0);
+      });
     } finally {
       await newDomainDP1.delete(apiContext);
       await newDomainDP2.delete(apiContext);
@@ -808,71 +807,65 @@ test.describe('Domains', () => {
         });
       });
 
-      await test.step(
-        'Navigate to domain and assign custom property value',
-        async () => {
-          // Navigate to domain page
-          await sidebarClick(page, SidebarItem.DOMAIN);
+      await test.step('Navigate to domain and assign custom property value', async () => {
+        // Navigate to domain page
+        await sidebarClick(page, SidebarItem.DOMAIN);
 
-          // Select the domain
-          await page
-            .getByRole('menuitem', { name: domain.data.displayName })
-            .locator('span')
-            .click();
+        // Select the domain
+        await page
+          .getByRole('menuitem', { name: domain.data.displayName })
+          .locator('span')
+          .click();
 
-          // Click on custom properties tab
-          await page.getByTestId('custom_properties').click();
+        // Click on custom properties tab
+        await page.getByTestId('custom_properties').click();
 
-          // Wait for custom properties to load
-          await page.waitForSelector('.ant-skeleton-active', {
-            state: 'detached',
-          });
+        // Wait for custom properties to load
+        await page.waitForSelector('.ant-skeleton-active', {
+          state: 'detached',
+        });
 
-          // Add custom property value
-          await page
-            .getByTestId(`custom-property-${propertyName}-card`)
-            .locator('svg')
-            .click();
+        // Add custom property value
+        await page
+          .getByTestId(`custom-property-${propertyName}-card`)
+          .locator('svg')
+          .click();
 
-          await page.getByTestId('value-input').fill(customPropertyValue);
+        await page.getByTestId('value-input').fill(customPropertyValue);
 
-          // Save the custom property value
-          const saveResponse = page.waitForResponse('/api/v1/domains/*');
-          await page.getByTestId('inline-save-btn').click();
-          await saveResponse;
+        // Save the custom property value
+        const saveResponse = page.waitForResponse('/api/v1/domains/*');
+        await page.getByTestId('inline-save-btn').click();
+        await saveResponse;
 
-          // Verify the value is displayed
-          await expect(
-            page.getByTestId(`custom-property-${propertyName}-card`)
-          ).toContainText(customPropertyValue);
-        }
-      );
+        // Verify the value is displayed
+        await expect(
+          page.getByTestId(`custom-property-${propertyName}-card`)
+        ).toContainText(customPropertyValue);
+      });
 
-      await test.step(
-        'Reload and verify custom property value persists',
-        async () => {
-          // Reload the page
-          await page.reload();
+      await test.step('Reload and verify custom property value persists', async () => {
+        // Reload the page
+        await page.reload();
 
-          // Navigate back to the domain and custom properties
-          await sidebarClick(page, SidebarItem.DOMAIN);
-          await page
-            .getByRole('menuitem', { name: domain.data.displayName })
-            .locator('span')
-            .click();
+        // Navigate back to the domain and custom properties
+        await sidebarClick(page, SidebarItem.DOMAIN);
+        await page
+          .getByRole('menuitem', { name: domain.data.displayName })
+          .locator('span')
+          .click();
 
-          await page.getByTestId('custom_properties').click();
+        await page.getByTestId('custom_properties').click();
 
-          await page.waitForSelector('.ant-skeleton-active', {
-            state: 'detached',
-          });
+        await page.waitForSelector('.ant-skeleton-active', {
+          state: 'detached',
+        });
 
-          // Verify the custom property value persists after reload
-          await expect(
-            page.getByTestId(`custom-property-${propertyName}-card`)
-          ).toContainText(customPropertyValue);
-        }
-      );
+        // Verify the custom property value persists after reload
+        await expect(
+          page.getByTestId(`custom-property-${propertyName}-card`)
+        ).toContainText(customPropertyValue);
+      });
 
       await test.step('Cleanup custom property', async () => {
         // Navigate back to domain settings to delete the custom property
@@ -1063,72 +1056,140 @@ test.describe('Data Consumer Domain Ownership', () => {
     const { page: dataConsumerPage, afterAction: consumerAfterAction } =
       await performUserLogin(browser, testResources.dataConsumerUser);
 
-    await test.step(
-      'Check domain management permissions for data consumer owner',
-      async () => {
-        await sidebarClick(dataConsumerPage, SidebarItem.DOMAIN);
-        await dataConsumerPage.waitForLoadState('networkidle');
-        await dataConsumerPage.waitForSelector('[data-testid="loader"]', {
-          state: 'detached',
-        });
+    await test.step('Check domain management permissions for data consumer owner', async () => {
+      await sidebarClick(dataConsumerPage, SidebarItem.DOMAIN);
+      await dataConsumerPage.waitForLoadState('networkidle');
+      await dataConsumerPage.waitForSelector('[data-testid="loader"]', {
+        state: 'detached',
+      });
 
-        const permissionRes = dataConsumerPage.waitForResponse(
-          '/api/v1/permissions/domain/*'
-        );
-        await dataConsumerPage
-          .getByRole('menuitem', {
-            name: testResources.domainForTest.data.displayName,
-          })
-          .locator('span')
-          .click();
+      const permissionRes = dataConsumerPage.waitForResponse(
+        '/api/v1/permissions/domain/*'
+      );
+      await dataConsumerPage
+        .getByRole('menuitem', {
+          name: testResources.domainForTest.data.displayName,
+        })
+        .locator('span')
+        .click();
 
-        await permissionRes;
+      await permissionRes;
 
-        await dataConsumerPage.getByTestId('domain-details-add-button').click();
+      await dataConsumerPage.getByTestId('domain-details-add-button').click();
 
-        // check Data Products menu item is visible
-        await expect(
-          dataConsumerPage.getByRole('menuitem', {
-            name: 'Data Products',
-            exact: true,
-          })
-        ).toBeVisible();
+      // check Data Products menu item is visible
+      await expect(
+        dataConsumerPage.getByRole('menuitem', {
+          name: 'Data Products',
+          exact: true,
+        })
+      ).toBeVisible();
 
-        await clickOutside(dataConsumerPage);
+      await clickOutside(dataConsumerPage);
 
-        await selectDataProductFromTab(
-          dataConsumerPage,
-          testResources.dataProductForTest.data
-        );
+      await selectDataProductFromTab(
+        dataConsumerPage,
+        testResources.dataProductForTest.data
+      );
 
-        // Verify the user can edit owner, tags, glossary and domain experts
-        await expect(dataConsumerPage.getByTestId('edit-owner')).toBeVisible();
-        await expect(
-          dataConsumerPage.getByTestId('tags-container').getByTestId('add-tag')
-        ).toBeVisible();
+      // Verify the user can edit owner, tags, glossary and domain experts
+      await expect(dataConsumerPage.getByTestId('edit-owner')).toBeVisible();
+      await expect(
+        dataConsumerPage.getByTestId('tags-container').getByTestId('add-tag')
+      ).toBeVisible();
 
-        await expect(
-          dataConsumerPage
-            .getByTestId('glossary-container')
-            .getByTestId('add-tag')
-        ).toBeVisible();
+      await expect(
+        dataConsumerPage
+          .getByTestId('glossary-container')
+          .getByTestId('add-tag')
+      ).toBeVisible();
 
-        await expect(
-          dataConsumerPage.getByTestId('domain-expert-name').getByTestId('Add')
-        ).toBeVisible();
+      await expect(
+        dataConsumerPage.getByTestId('domain-expert-name').getByTestId('Add')
+      ).toBeVisible();
 
-        await expect(
-          dataConsumerPage.getByTestId('manage-button')
-        ).toBeVisible();
+      await expect(dataConsumerPage.getByTestId('manage-button')).toBeVisible();
 
-        await addTagsAndGlossaryToDomain(dataConsumerPage, {
-          tagFqn: tag.responseData.fullyQualifiedName,
-          glossaryTermFqn: glossaryTerm.responseData.fullyQualifiedName,
-          isDomain: false,
-        });
-      }
-    );
+      await addTagsAndGlossaryToDomain(dataConsumerPage, {
+        tagFqn: tag.responseData.fullyQualifiedName,
+        glossaryTermFqn: glossaryTerm.responseData.fullyQualifiedName,
+        isDomain: false,
+      });
+    });
 
     await consumerAfterAction();
+  });
+});
+
+test.describe('Domain Access with hasDomain() Rule', () => {
+  test.slow(true);
+
+  let testResources: {
+    testUser: UserClass;
+    mainDomain: Domain;
+    subDomain: SubDomain;
+    domainTable: TableClass;
+    subDomainTable: TableClass;
+    domainPolicy: PolicyClass;
+    domainRole: RolesClass;
+    domainTeam: TeamClass;
+    cleanup: (apiContext1: APIRequestContext) => Promise<void>;
+  };
+
+  test.beforeAll('Setup pre-requests', async ({ browser }) => {
+    const { apiContext, afterAction } = await performAdminLogin(browser);
+    testResources = await setupDomainHasDomainTest(apiContext);
+    await afterAction();
+  });
+
+  test.afterAll('Cleanup', async ({ browser }) => {
+    const { apiContext, afterAction } = await performAdminLogin(browser);
+    await testResources.cleanup(apiContext);
+    await afterAction();
+  });
+
+  test('User with hasDomain() rule can access domain and subdomain assets', async ({
+    browser,
+  }) => {
+    // Login as test user and verify access
+    const { page: userPage, afterAction: userAfterAction } =
+      await performUserLogin(browser, testResources.testUser);
+
+    await test.step('Verify user can access domain assets', async () => {
+      // Navigate to the domain table
+      const domainTableFqn =
+        testResources.domainTable.entityResponseData.fullyQualifiedName;
+      await userPage.goto(`/table/${encodeURIComponent(domainTableFqn)}`);
+      await userPage.waitForLoadState('networkidle');
+      await userPage.waitForSelector('[data-testid="loader"]', {
+        state: 'detached',
+      });
+
+      // Verify no permission error
+      await expect(
+        userPage.getByTestId('permission-error-placeholder')
+      ).not.toBeVisible();
+
+      // Verify table details are visible
+      await expect(userPage.getByTestId('entity-header-title')).toBeVisible();
+    });
+
+    await test.step('Verify user can access subdomain assets', async () => {
+      // Navigate to the subdomain table
+      const subDomainTableFqn =
+        testResources.subDomainTable.entityResponseData.fullyQualifiedName;
+      await userPage.goto(`/table/${encodeURIComponent(subDomainTableFqn)}`);
+      await userPage.waitForLoadState('networkidle');
+
+      // Verify no permission error
+      await expect(
+        userPage.getByTestId('permission-error-placeholder')
+      ).not.toBeVisible();
+
+      // Verify table details are visible
+      await expect(userPage.getByTestId('entity-header-title')).toBeVisible();
+    });
+
+    await userAfterAction();
   });
 });
